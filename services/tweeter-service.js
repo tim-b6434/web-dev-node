@@ -1,14 +1,13 @@
-let tweets = require('../data/tweets.json');
+const dao = require('../db/tweets/tweet-dao')
 
 module.exports = (app) => {
-
   const findAllTweets = (req, res) => {
-    res.json(tweets);
+    dao.findAllTweets()
+    .then(tweets => res.json(tweets))
   }
 
   const postNewTweet = (req, res) => {
     const newTweet = {
-      _id: (new Date()).getTime() + '',
       "topic": "Web Development",
       "userName": "ReactJS",
       "verified": false,
@@ -23,36 +22,20 @@ module.exports = (app) => {
       },
       ...req.body
     }
-    tweets = [
-      newTweet,
-      ...tweets
-    ];
-    res.json(newTweet);
+    dao.createTweet(newTweet)
+    .then(tweet => res.json(tweet));
   }
 
   const deleteTweet = (req, res) => {
     const id = req.params['id'];
-    tweets = tweets.filter(tweet => id !== tweet._id);
-    req.sendStatus(200);
+    dao.deleteTweet(id)
+    .then((status) => res.send(status));
   }
 
   const likeTweet = (req, res) => {
     const id = req.params['id'];
-    tweets = tweets.map(tweet => {
-      if (tweet._id === id) {
-        if (tweet.liked === true) {
-          tweet.liked = false;
-          tweet.stats.likes--;
-        } else {
-          tweet.liked = true;
-          tweet.stats.likes++;
-        }
-        return tweet;
-      } else {
-        return tweet;
-      }
-    });
-    res.sendStatus(200);
+    dao.updateTweet(id, req.body)
+    .then((status) => res.send(status))
   }
 
   app.put('/api/tweets/:id/like', likeTweet);
